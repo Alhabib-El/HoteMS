@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Staff / auth
+// ─────────────────────────────────────────────────────────────────────────
+
+enum StaffRole {
+  MANAGEMENT
+  ROOMS
+  RESTAURANT
+  LIQUOR
+}
+
+model Staff {
+  id              String           @id @default(cuid())
+  fullName        String
+  pinHash         String
+  role            StaffRole
+  active          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  assignedOrders  Order[]
+  liquorTransfers LiquorTransfer[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Rooms module
+// ─────────────────────────────────────────────────────────────────────────
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  CLEANING
+  MAINTENANCE
+}
+
+enum BookingStatus {
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+}
+
+enum SourceModule {
+  ROOM
+  RESTAURANT
+}
+
+model RoomType {
+  id          String  @id @default(cuid())
+  name        String
+  basePrice   Decimal @db.Decimal(10, 2)
+  capacity    Int
+  description String?
+  rooms       Room[]
+}
+
+model Room {
+  id         String     @id @default(cuid())
+  number     String     @unique
+  keyNumber  String
+  floor      Int
+  status     RoomStatus @default(AVAILABLE)
+  roomTypeId String
+  roomType   RoomType   @relation(fields: [roomTypeId], references: [id])
+  bookings   Booking[]
+}
+
+model Guest {
+  id       String    @id @default(cuid())
+  fullName String
+  phone    String?
+  email    String?
+  idNumber String?
+  bookings Booking[]
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  roomId             String
+  room               Room          @relation(fields: [roomId], references: [id])
+  guestId            String
+  guest              Guest         @relation(fields: [guestId], references: [id])
+  checkInAt          DateTime      @default(now())
+  expectedCheckOutAt DateTime
+  checkOutAt         DateTime?
+  ratePerNight       Decimal       @db.Decimal(10, 2) // flat charge for the stay when isShortStay, else per-night rate
+  isShortStay        Boolean       @default(false)
+  status             BookingStatus @default(CHECKED_IN)
+  notes              String?
+  folioCharges       FolioCharge[]
+  restaurantOrders   Order[]
+  createdAt          DateTime      @default(now())
+}
+
+model FolioCharge {
+  id           String       @id @default(cuid())
+  bookingId    String
+  booking      Booking      @relation(fields: [bookingId], references: [id])
+  sourceModule SourceModule
+  description  String
+  amount       Decimal      @db.Decimal(10, 2)
+  createdAt    DateTime     @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Restaurant module
+// ─────────────────────────────────────────────────────────────────────────
+
+enum TableStatus {
+  FREE
+  OCCUPIED
+}
+
+enum OrderStatus {
+  OPEN
+  PAID
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  ROOM_CHARGE
+}
+
+enum OrderItemPrepStatus {
+  RECEIVED
+  PREPARING
+  READY
+  SERVED
+}
+
+model MenuCategory {
+  id    String     @id @default(cuid())
+  name  String
+  items MenuItem[]
+}
+
+model MenuItem {
+  id                    String         @id @default(cuid())
+  name                  String
+  categoryId            String
+  category              MenuCategory   @relation(fields: [categoryId], references: [id])
+  price                 Decimal        @db.Decimal(10, 2)
+  isAvailable           Boolean        @default(true)
+  // null = unlimited kitchen-prepared item; non-null = stock-tracked (e.g. transferred from a liquor store)
+  stockQuantity         Int?
+  lowStockThreshold     Int?
+  sourceLiquorProductId String?        @unique
+  sourceLiquorProduct   LiquorProduct? @relation(fields: [sourceLiquorProductId], references: [id])
+  orderItems            OrderItem[]
+}
+
+model RestaurantTable {
+  id     String      @id @default(cuid())
+  number String      @unique
+  seats  Int
+  status TableStatus @default(FREE)
+  orders Order[]
+}
+
+model Order {
+  id              String           @id @default(cuid())
+  tableId         String?
+  table           RestaurantTable? @relation(fields: [tableId], references: [id])
+  bookingId       String?
+  booking         Booking?         @relation(fields: [bookingId], references: [id])
+  assignedStaffId String?
+  assignedStaff   Staff?           @relation(fields: [assignedStaffId], references: [id])
+  status          OrderStatus      @default(OPEN)
+  items           OrderItem[]
+  payments        Payment[]
+  createdAt       DateTime         @default(now())
+  closedAt        DateTime?
+}
+
+model OrderItem {
+  id         String              @id @default(cuid())
+  orderId    String
+  order      Order               @relation(fields: [orderId], references: [id])
+  menuItemId String
+  menuItem   MenuItem            @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  unitPrice  Decimal             @db.Decimal(10, 2)
+  notes      String?
+  prepStatus OrderItemPrepStatus @default(RECEIVED)
+  voided     Boolean             @default(false)
+  voidReason String?
+}
+
+model Payment {
+  id      String        @id @default(cuid())
+  orderId String
+  order   Order         @relation(fields: [orderId], references: [id])
+  amount  Decimal       @db.Decimal(10, 2)
+  method  PaymentMethod
+  paidAt  DateTime      @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Liquor stores module (supports multiple stores)
+//
+// A liquor store is a wholesale supplier — it never sells directly to guests.
+// Its only "sale" is a wholesale transfer of stock to the restaurant, which
+// then resells it at retail through its own bar (a MenuItem, see above).
+// ─────────────────────────────────────────────────────────────────────────
+
+model LiquorStore {
+  id        String           @id @default(cuid())
+  name      String
+  location  String?
+  products  LiquorProduct[]
+  transfers LiquorTransfer[]
+}
+
+model LiquorProduct {
+  id                 String            @id @default(cuid())
+  storeId            String
+  store              LiquorStore       @relation(fields: [storeId], references: [id])
+  name               String
+  category           String?
+  unitPrice          Decimal           @db.Decimal(10, 2)
+  costPrice          Decimal           @db.Decimal(10, 2)
+  stockQuantity      Int               @default(0)
+  lowStockThreshold  Int               @default(5)
+  adjustments        StockAdjustment[]
+  transfers          LiquorTransfer[]
+  restaurantMenuItem MenuItem?
+}
+
+// A wholesale shipment of stock from a liquor store to the restaurant's bar.
+// wholesalePrice snapshots the store's unit price at transfer time (for accurate
+// historical valuation even if the product's price changes later); retailPrice is
+// what the restaurant then charges guests for it.
+model LiquorTransfer {
+  id             String        @id @default(cuid())
+  storeId        String
+  store          LiquorStore   @relation(fields: [storeId], references: [id])
+  productId      String
+  product        LiquorProduct @relation(fields: [productId], references: [id])
+  quantity       Int
+  wholesalePrice Decimal       @db.Decimal(10, 2)
+  retailPrice    Decimal       @db.Decimal(10, 2)
+  staffId        String
+  staff          Staff         @relation(fields: [staffId], references: [id])
+  createdAt      DateTime      @default(now())
+}
+
+model StockAdjustment {
+  id             String        @id @default(cuid())
+  productId      String
+  product        LiquorProduct @relation(fields: [productId], references: [id])
+  quantityChange Int
+  reason         String
+  createdAt      DateTime      @default(now())
+}
