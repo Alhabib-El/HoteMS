@@ -41,3 +41,7 @@ export async function postCheckOut(req: Request, res: Response) {
 export async function patchRoomStatus(req: Request, res: Response) {
   res.json(await roomsService.setRoomStatus(req.params.id, req.body.status));
 }
+
+export async function patchHousekeeping(req: Request, res: Response) {
+  res.json(await roomsService.setHousekeeping(req.params.id, req.body.housekeeping));
+}

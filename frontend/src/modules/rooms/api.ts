@@ -1,6 +1,7 @@
 import { apiClient } from "../../shared/api/client";
 
 export type RoomStatus = "AVAILABLE" | "OCCUPIED" | "CLEANING" | "MAINTENANCE";
+export type HousekeepingStatus = "CLEAN" | "NOT_CLEAN" | "IN_PROGRESS" | "REPAIR";
 export type BookingStatus = "CHECKED_IN" | "CHECKED_OUT" | "CANCELLED";
 
 export interface RoomType {
@@ -41,6 +42,7 @@ export interface Room {
   keyNumber: string;
   floor: number;
   status: RoomStatus;
+  housekeeping: HousekeepingStatus;
   roomTypeId: string;
   roomType: RoomType;
   bookings?: Booking[];
@@ -49,7 +51,7 @@ export interface Room {
 export interface FolioCharge {
   id: string;
   bookingId: string;
-  sourceModule: "ROOM" | "RESTAURANT" | "LIQUOR";
+  sourceModule: "ROOM" | "RESTAURANT";
   description: string;
   amount: string;
   createdAt: string;
@@ -84,4 +86,6 @@ export const roomsApi = {
   checkOut: (bookingId: string) => apiClient.post<Booking>(`/rooms/bookings/${bookingId}/checkout`).then((r) => r.data),
   setRoomStatus: (roomId: string, status: "AVAILABLE" | "CLEANING" | "MAINTENANCE") =>
     apiClient.patch<Room>(`/rooms/${roomId}/status`, { status }).then((r) => r.data),
+  setHousekeeping: (roomId: string, housekeeping: HousekeepingStatus) =>
+    apiClient.patch<Room>(`/rooms/${roomId}/housekeeping`, { housekeeping }).then((r) => r.data),
 };

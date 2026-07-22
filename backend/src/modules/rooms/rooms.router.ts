@@ -16,6 +16,7 @@ roomsRouter.post("/types", asyncHandler(controller.postRoomType));
 roomsRouter.get("/", asyncHandler(controller.getRooms));
 roomsRouter.post("/", asyncHandler(controller.postRoom));
 roomsRouter.patch("/:id/status", asyncHandler(controller.patchRoomStatus));
+roomsRouter.patch("/:id/housekeeping", asyncHandler(controller.patchHousekeeping));
 
 roomsRouter.post("/bookings", asyncHandler(controller.postBooking));
 roomsRouter.get("/bookings/:id/folio", asyncHandler(controller.getFolio));

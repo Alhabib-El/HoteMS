@@ -1,13 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "../../../shared/components/Button";
 import { Card } from "../../../shared/components/Card";
 import { formatMoney } from "../../../shared/utils/currency";
+import { RoomsTabs } from "../components/RoomsTabs";
 import { roomsApi } from "../api";
 
 export function ManageRoomsPage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: roomTypes } = useQuery({ queryKey: ["room-types"], queryFn: roomsApi.listRoomTypes });
@@ -44,12 +43,8 @@ export function ManageRoomsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Manage rooms &amp; room types</h1>
-        <Button variant="secondary" onClick={() => navigate("/rooms")}>
-          Back to room board
-        </Button>
-      </div>
+      <RoomsTabs />
+      <h1 className="text-xl font-bold mb-4">Manage rooms &amp; room types</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card>

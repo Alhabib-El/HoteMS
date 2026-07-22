@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Badge } from "../../../shared/components/Badge";
 import { Card } from "../../../shared/components/Card";
+import { RoomsTabs } from "../components/RoomsTabs";
 import { roomsApi } from "../api";
 
 export function BookingsPage() {
@@ -12,6 +13,7 @@ export function BookingsPage() {
 
   return (
     <div>
+      <RoomsTabs />
       <h1 className="text-xl font-bold mb-4">Active bookings</h1>
       {isLoading && <p className="text-slate-500">Loading…</p>}
       {bookings?.length === 0 && <p className="text-slate-500">No guests currently checked in.</p>}

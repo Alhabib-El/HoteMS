@@ -40,6 +40,16 @@ enum RoomStatus {
   MAINTENANCE
 }
 
+// Independent from RoomStatus: tracks the physical cleanliness of the room, not its
+// booking availability. CLEAN flips a CLEANING room back to AVAILABLE; REPAIR flips
+// the room to MAINTENANCE (see rooms.service.setHousekeeping).
+enum HousekeepingStatus {
+  CLEAN
+  NOT_CLEAN
+  IN_PROGRESS
+  REPAIR
+}
+
 enum BookingStatus {
   CHECKED_IN
   CHECKED_OUT
@@ -61,14 +71,15 @@ model RoomType {
 }
 
 model Room {
-  id         String     @id @default(cuid())
-  number     String     @unique
-  keyNumber  String
-  floor      Int
-  status     RoomStatus @default(AVAILABLE)
-  roomTypeId String
-  roomType   RoomType   @relation(fields: [roomTypeId], references: [id])
-  bookings   Booking[]
+  id            String             @id @default(cuid())
+  number        String             @unique
+  keyNumber     String
+  floor         Int
+  status        RoomStatus         @default(AVAILABLE)
+  housekeeping  HousekeepingStatus @default(CLEAN)
+  roomTypeId    String
+  roomType      RoomType           @relation(fields: [roomTypeId], references: [id])
+  bookings      Booking[]
 }
 
 model Guest {

@@ -27,13 +27,34 @@ async function main() {
 
   const roomsData = [
     { number: "101", keyNumber: "K101", floor: 1, roomTypeId: standard.id },
-    { number: "102", keyNumber: "K102", floor: 1, roomTypeId: standard.id },
-    { number: "103", keyNumber: "K103", floor: 1, roomTypeId: standard.id },
+    { number: "102", keyNumber: "K102", floor: 1, roomTypeId: standard.id, status: "MAINTENANCE" as const, housekeeping: "REPAIR" as const },
+    { number: "103", keyNumber: "K103", floor: 1, roomTypeId: standard.id, status: "CLEANING" as const, housekeeping: "IN_PROGRESS" as const },
     { number: "201", keyNumber: "K201", floor: 2, roomTypeId: deluxe.id },
     { number: "202", keyNumber: "K202", floor: 2, roomTypeId: deluxe.id },
     { number: "301", keyNumber: "K301", floor: 3, roomTypeId: suite.id },
   ];
-  for (const r of roomsData) await prisma.room.create({ data: r });
+  const rooms = new Map<string, { id: string }>();
+  for (const r of roomsData) rooms.set(r.number, await prisma.room.create({ data: r }));
+
+  // A couple of occupied rooms so the room board demos the "guest checked in" card state too.
+  const occupiedSeed = [
+    { roomNumber: "201", guestName: "Michael Suyama", nights: 2 },
+    { roomNumber: "202", guestName: "Nancy Davolio", nights: 4 },
+  ];
+  for (const o of occupiedSeed) {
+    const room = rooms.get(o.roomNumber)!;
+    const guest = await prisma.guest.create({ data: { fullName: o.guestName } });
+    const roomType = o.roomNumber.startsWith("2") ? deluxe : standard;
+    await prisma.booking.create({
+      data: {
+        roomId: room.id,
+        guestId: guest.id,
+        expectedCheckOutAt: new Date(Date.now() + o.nights * 24 * 60 * 60 * 1000),
+        ratePerNight: roomType.basePrice,
+      },
+    });
+    await prisma.room.update({ where: { id: room.id }, data: { status: "OCCUPIED" } });
+  }
 
   const starters = await prisma.menuCategory.create({ data: { name: "Starters" } });
   const mains = await prisma.menuCategory.create({ data: { name: "Mains" } });

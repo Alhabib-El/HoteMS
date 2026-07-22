@@ -134,7 +134,7 @@ export async function checkOut(bookingId: string) {
       data: { status: "CHECKED_OUT", checkOutAt: new Date() },
       include: { guest: true, room: { include: { roomType: true } }, folioCharges: true },
     });
-    await tx.room.update({ where: { id: booking.roomId }, data: { status: "CLEANING" } });
+    await tx.room.update({ where: { id: booking.roomId }, data: { status: "CLEANING", housekeeping: "NOT_CLEAN" } });
     return updated;
   });
 }
@@ -144,4 +144,21 @@ export async function setRoomStatus(roomId: string, status: "AVAILABLE" | "CLEAN
   if (!room) throw new HttpError(404, "Room not found");
   if (room.status === "OCCUPIED") throw new HttpError(409, "Cannot change status of an occupied room");
   return prisma.room.update({ where: { id: roomId }, data: { status } });
+}
+
+export async function setHousekeeping(
+  roomId: string,
+  housekeeping: "CLEAN" | "NOT_CLEAN" | "IN_PROGRESS" | "REPAIR"
+) {
+  const room = await prisma.room.findUnique({ where: { id: roomId } });
+  if (!room) throw new HttpError(404, "Room not found");
+  if (room.status === "OCCUPIED") throw new HttpError(409, "Cannot update housekeeping while room is occupied");
+
+  // Marking a room clean returns it to the available pool; marking it in need of repair
+  // takes it out of service — both flow back into the occupancy status automatically.
+  let status = room.status;
+  if (housekeeping === "CLEAN") status = "AVAILABLE";
+  if (housekeeping === "REPAIR") status = "MAINTENANCE";
+
+  return prisma.room.update({ where: { id: roomId }, data: { housekeeping, status } });
 }

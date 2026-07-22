@@ -8,6 +8,7 @@ import { RoomBoardPage } from "./modules/rooms/pages/RoomBoardPage";
 import { BookingsPage } from "./modules/rooms/pages/BookingsPage";
 import { CheckOutPage } from "./modules/rooms/pages/CheckOutPage";
 import { ManageRoomsPage } from "./modules/rooms/pages/ManageRoomsPage";
+import { HousekeepingPage } from "./modules/rooms/pages/HousekeepingPage";
 import { TableMapPage } from "./modules/restaurant/pages/TableMapPage";
 import { OrderScreenPage } from "./modules/restaurant/pages/OrderScreenPage";
 import { MenuManagerPage } from "./modules/restaurant/pages/MenuManagerPage";
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="rooms/bookings" element={<ProtectedRoute roles={["ROOMS"]}><BookingsPage /></ProtectedRoute>} />
         <Route path="rooms/bookings/:id/checkout" element={<ProtectedRoute roles={["ROOMS"]}><CheckOutPage /></ProtectedRoute>} />
         <Route path="rooms/manage" element={<ProtectedRoute roles={["ROOMS"]}><ManageRoomsPage /></ProtectedRoute>} />
+        <Route path="rooms/housekeeping" element={<ProtectedRoute roles={["ROOMS"]}><HousekeepingPage /></ProtectedRoute>} />
 
         <Route path="restaurant" element={<ProtectedRoute roles={["RESTAURANT"]}><TableMapPage /></ProtectedRoute>} />
         <Route path="restaurant/orders/:id" element={<ProtectedRoute roles={["RESTAURANT"]}><OrderScreenPage /></ProtectedRoute>} />
