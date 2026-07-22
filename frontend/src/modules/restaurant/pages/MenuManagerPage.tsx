@@ -4,6 +4,7 @@ import { Badge } from "../../../shared/components/Badge";
 import { Button } from "../../../shared/components/Button";
 import { Card } from "../../../shared/components/Card";
 import { formatMoney } from "../../../shared/utils/currency";
+import { RestaurantTabs } from "../components/RestaurantTabs";
 import { restaurantApi } from "../api";
 
 export function MenuManagerPage() {
@@ -48,6 +49,7 @@ export function MenuManagerPage() {
 
   return (
     <div>
+      <RestaurantTabs />
       <h1 className="text-xl font-bold mb-4">Menu management</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -112,11 +114,21 @@ export function MenuManagerPage() {
               <Card key={item.id}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="text-sm font-medium">{item.name}</div>
-                  {item.stockQuantity !== null && <Badge color={item.stockQuantity <= (item.lowStockThreshold ?? 0) ? "red" : "blue"}>Bar</Badge>}
+                  {item.stockQuantity !== null && (
+                    <Badge color={item.stockQuantity <= (item.lowStockThreshold ?? 0) ? "red" : "blue"}>Bar</Badge>
+                  )}
+                  {item.availablePortions !== null && item.availablePortions !== undefined && (
+                    <Badge color={item.availablePortions <= 0 ? "red" : "slate"}>Recipe</Badge>
+                  )}
                 </div>
                 <div className="text-xs text-slate-500">{formatMoney(Number(item.price))}</div>
                 {item.stockQuantity !== null && (
                   <div className="text-xs text-slate-400 mt-1">Stock: {item.stockQuantity}</div>
+                )}
+                {item.availablePortions !== null && item.availablePortions !== undefined && (
+                  <div className="text-xs text-slate-400 mt-1">
+                    {item.availablePortions > 0 ? `${item.availablePortions} portions available` : "Out of stock"}
+                  </div>
                 )}
               </Card>
             ))}

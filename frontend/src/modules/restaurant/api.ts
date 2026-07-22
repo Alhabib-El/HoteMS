@@ -6,6 +6,7 @@ export type PaymentMethod = "CASH" | "CARD" | "ROOM_CHARGE";
 export type OrderItemPrepStatus = "RECEIVED" | "PREPARING" | "READY" | "SERVED";
 
 export const PREP_STATUS_SEQUENCE: OrderItemPrepStatus[] = ["RECEIVED", "PREPARING", "READY", "SERVED"];
+export type IngredientCategory = "PROTEIN" | "PRODUCE" | "DAIRY" | "PANTRY" | "BEVERAGE" | "FROZEN" | "BAKERY";
 
 export interface MenuItem {
   id: string;
@@ -16,6 +17,9 @@ export interface MenuItem {
   stockQuantity: number | null;
   lowStockThreshold: number | null;
   sourceLiquorProductId?: string | null;
+  // null = unlimited / no recipe defined; otherwise how many more servings the kitchen can
+  // currently make, computed from recipe ingredient stock.
+  availablePortions?: number | null;
 }
 
 export interface MenuCategory {
@@ -70,6 +74,26 @@ export interface Order {
   createdAt: string;
 }
 
+export interface Ingredient {
+  id: string;
+  name: string;
+  category: IngredientCategory;
+  unit: string;
+  stockQuantity: string;
+  lowStockThreshold: string;
+  costPerUnit: string;
+  supplier?: string | null;
+}
+
+export interface RecipeLine {
+  id: string;
+  menuItemId: string;
+  menuItem: MenuItem;
+  ingredientId: string;
+  ingredient: Ingredient;
+  quantityPerServing: string;
+}
+
 export const restaurantApi = {
   listCategories: () => apiClient.get<MenuCategory[]>("/restaurant/menu").then((r) => r.data),
   createCategory: (data: { name: string }) =>
@@ -96,4 +120,22 @@ export const restaurantApi = {
     apiClient.post(`/restaurant/orders/${orderId}/items/${itemId}/void`, { reason }).then((r) => r.data),
   addPayment: (orderId: string, data: { amount: number; method: PaymentMethod }) =>
     apiClient.post<Order>(`/restaurant/orders/${orderId}/payments`, data).then((r) => r.data),
+
+  listIngredients: () => apiClient.get<Ingredient[]>("/restaurant/ingredients").then((r) => r.data),
+  createIngredient: (data: {
+    name: string;
+    category: IngredientCategory;
+    unit: string;
+    stockQuantity?: number;
+    lowStockThreshold?: number;
+    costPerUnit?: number;
+    supplier?: string;
+  }) => apiClient.post<Ingredient>("/restaurant/ingredients", data).then((r) => r.data),
+  adjustIngredientStock: (ingredientId: string, data: { quantityChange: number; reason: string }) =>
+    apiClient.post<Ingredient>(`/restaurant/ingredients/${ingredientId}/adjustments`, data).then((r) => r.data),
+
+  listRecipes: () => apiClient.get<RecipeLine[]>("/restaurant/recipes").then((r) => r.data),
+  upsertRecipeLine: (data: { menuItemId: string; ingredientId: string; quantityPerServing: number }) =>
+    apiClient.post<RecipeLine>("/restaurant/recipes", data).then((r) => r.data),
+  deleteRecipeLine: (id: string) => apiClient.delete(`/restaurant/recipes/${id}`),
 };

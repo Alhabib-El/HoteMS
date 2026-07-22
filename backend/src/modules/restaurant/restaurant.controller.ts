@@ -41,8 +41,34 @@ export async function patchOrderItemStatus(req: Request, res: Response) {
   res.json(await service.updateItemPrepStatus(req.params.id, req.params.itemId, req.body.status));
 }
 export async function postOrderItemVoid(req: Request, res: Response) {
-  res.json(await service.voidOrderItem(req.params.id, req.params.itemId, req.body));
+  res.json(await service.voidOrderItem(req.params.id, req.params.itemId, req.body, req.staff?.id));
 }
 export async function postOrderPayment(req: Request, res: Response) {
   res.json(await service.addPayment(req.params.id, req.body));
+}
+
+export async function getIngredients(_req: Request, res: Response) {
+  res.json(await service.listIngredients());
+}
+export async function postIngredient(req: Request, res: Response) {
+  res.status(201).json(await service.createIngredient(req.body));
+}
+export async function postIngredientAdjustment(req: Request, res: Response) {
+  res
+    .status(201)
+    .json(await service.adjustIngredientStock(req.params.id, { ...req.body, staffId: req.staff?.id }));
+}
+export async function getIngredientLowStock(_req: Request, res: Response) {
+  res.json(await service.listLowStockIngredients());
+}
+
+export async function getRecipes(_req: Request, res: Response) {
+  res.json(await service.listRecipes());
+}
+export async function postRecipeLine(req: Request, res: Response) {
+  res.status(201).json(await service.upsertRecipeLine(req.body));
+}
+export async function deleteRecipeLine(req: Request, res: Response) {
+  await service.deleteRecipeLine(req.params.id);
+  res.status(204).end();
 }

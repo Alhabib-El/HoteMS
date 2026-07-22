@@ -148,7 +148,8 @@ export async function setRoomStatus(roomId: string, status: "AVAILABLE" | "CLEAN
 
 export async function setHousekeeping(
   roomId: string,
-  housekeeping: "CLEAN" | "NOT_CLEAN" | "IN_PROGRESS" | "REPAIR"
+  housekeeping: "CLEAN" | "NOT_CLEAN" | "IN_PROGRESS" | "REPAIR",
+  staffId?: string
 ) {
   const room = await prisma.room.findUnique({ where: { id: roomId } });
   if (!room) throw new HttpError(404, "Room not found");
@@ -160,5 +161,100 @@ export async function setHousekeeping(
   if (housekeeping === "CLEAN") status = "AVAILABLE";
   if (housekeeping === "REPAIR") status = "MAINTENANCE";
 
-  return prisma.room.update({ where: { id: roomId }, data: { housekeeping, status } });
+  const justCleaned = housekeeping === "CLEAN" && room.housekeeping !== "CLEAN";
+
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.room.update({ where: { id: roomId }, data: { housekeeping, status } });
+
+    // Turning a room over consumes its room type's par-level supplies from the central store.
+    if (justCleaned) {
+      const requirements = await tx.roomSupplyRequirement.findMany({
+        where: { roomTypeId: room.roomTypeId },
+        include: { supplyItem: true },
+      });
+      for (const req of requirements) {
+        const consumed = Math.min(req.quantityPerClean, req.supplyItem.stockQuantity);
+        if (consumed <= 0) continue;
+        await tx.roomSupplyItem.update({
+          where: { id: req.supplyItemId },
+          data: { stockQuantity: { decrement: consumed } },
+        });
+        await tx.roomSupplyAdjustment.create({
+          data: {
+            supplyItemId: req.supplyItemId,
+            quantityChange: -consumed,
+            reason: `Room turnover: Room ${room.number}`,
+            roomId: room.id,
+            staffId,
+          },
+        });
+      }
+    }
+
+    return updated;
+  });
+}
+
+export function listSupplyItems() {
+  return prisma.roomSupplyItem.findMany({ orderBy: [{ category: "asc" }, { name: "asc" }] });
+}
+
+export function createSupplyItem(data: {
+  name: string;
+  category: "LINEN" | "TOILETRIES" | "AMENITIES" | "CLEANING";
+  unit: string;
+  stockQuantity?: number;
+  lowStockThreshold?: number;
+  costPrice?: number;
+}) {
+  return prisma.roomSupplyItem.create({ data });
+}
+
+export async function adjustSupplyStock(
+  supplyItemId: string,
+  data: { quantityChange: number; reason: string; staffId?: string }
+) {
+  const item = await prisma.roomSupplyItem.findUnique({ where: { id: supplyItemId } });
+  if (!item) throw new HttpError(404, "Supply item not found");
+  if (item.stockQuantity + data.quantityChange < 0) throw new HttpError(409, "Resulting stock cannot be negative");
+
+  return prisma.$transaction(async (tx) => {
+    await tx.roomSupplyAdjustment.create({
+      data: {
+        supplyItemId,
+        quantityChange: data.quantityChange,
+        reason: data.reason,
+        staffId: data.staffId,
+      },
+    });
+    return tx.roomSupplyItem.update({
+      where: { id: supplyItemId },
+      data: { stockQuantity: { increment: data.quantityChange } },
+    });
+  });
+}
+
+export async function listLowStockSupplies() {
+  const items = await prisma.roomSupplyItem.findMany({ orderBy: { stockQuantity: "asc" } });
+  return items.filter((i) => i.stockQuantity <= i.lowStockThreshold);
+}
+
+export function listSupplyRequirements() {
+  return prisma.roomSupplyRequirement.findMany({
+    include: { roomType: true, supplyItem: true },
+    orderBy: [{ roomType: { name: "asc" } }, { supplyItem: { name: "asc" } }],
+  });
+}
+
+export function upsertSupplyRequirement(data: { roomTypeId: string; supplyItemId: string; quantityPerClean: number }) {
+  return prisma.roomSupplyRequirement.upsert({
+    where: { roomTypeId_supplyItemId: { roomTypeId: data.roomTypeId, supplyItemId: data.supplyItemId } },
+    create: data,
+    update: { quantityPerClean: data.quantityPerClean },
+    include: { roomType: true, supplyItem: true },
+  });
+}
+
+export function deleteSupplyRequirement(id: string) {
+  return prisma.roomSupplyRequirement.delete({ where: { id } });
 }

@@ -3,6 +3,7 @@ import { apiClient } from "../../shared/api/client";
 export type RoomStatus = "AVAILABLE" | "OCCUPIED" | "CLEANING" | "MAINTENANCE";
 export type HousekeepingStatus = "CLEAN" | "NOT_CLEAN" | "IN_PROGRESS" | "REPAIR";
 export type BookingStatus = "CHECKED_IN" | "CHECKED_OUT" | "CANCELLED";
+export type RoomSupplyCategory = "LINEN" | "TOILETRIES" | "AMENITIES" | "CLEANING";
 
 export interface RoomType {
   id: string;
@@ -65,6 +66,25 @@ export interface Folio {
   grandTotal: number;
 }
 
+export interface RoomSupplyItem {
+  id: string;
+  name: string;
+  category: RoomSupplyCategory;
+  unit: string;
+  stockQuantity: number;
+  lowStockThreshold: number;
+  costPrice: string;
+}
+
+export interface RoomSupplyRequirement {
+  id: string;
+  roomTypeId: string;
+  roomType: RoomType;
+  supplyItemId: string;
+  supplyItem: RoomSupplyItem;
+  quantityPerClean: number;
+}
+
 export const roomsApi = {
   listRoomTypes: () => apiClient.get<RoomType[]>("/rooms/types").then((r) => r.data),
   createRoomType: (data: { name: string; basePrice: number; capacity: number; description?: string }) =>
@@ -88,4 +108,22 @@ export const roomsApi = {
     apiClient.patch<Room>(`/rooms/${roomId}/status`, { status }).then((r) => r.data),
   setHousekeeping: (roomId: string, housekeeping: HousekeepingStatus) =>
     apiClient.patch<Room>(`/rooms/${roomId}/housekeeping`, { housekeeping }).then((r) => r.data),
+
+  listSupplyItems: () => apiClient.get<RoomSupplyItem[]>("/rooms/supplies").then((r) => r.data),
+  createSupplyItem: (data: {
+    name: string;
+    category: RoomSupplyCategory;
+    unit: string;
+    stockQuantity?: number;
+    lowStockThreshold?: number;
+    costPrice?: number;
+  }) => apiClient.post<RoomSupplyItem>("/rooms/supplies", data).then((r) => r.data),
+  adjustSupplyStock: (supplyItemId: string, data: { quantityChange: number; reason: string }) =>
+    apiClient.post<RoomSupplyItem>(`/rooms/supplies/${supplyItemId}/adjustments`, data).then((r) => r.data),
+
+  listSupplyRequirements: () =>
+    apiClient.get<RoomSupplyRequirement[]>("/rooms/supply-requirements").then((r) => r.data),
+  upsertSupplyRequirement: (data: { roomTypeId: string; supplyItemId: string; quantityPerClean: number }) =>
+    apiClient.post<RoomSupplyRequirement>("/rooms/supply-requirements", data).then((r) => r.data),
+  deleteSupplyRequirement: (id: string) => apiClient.delete(`/rooms/supply-requirements/${id}`),
 };

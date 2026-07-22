@@ -109,18 +109,22 @@ export function OrderScreenPage() {
           </select>
         </div>
 
+        {addItem.isError && <p className="text-sm text-red-600 mb-2">Couldn't add item — check ingredient stock.</p>}
+
         {categories?.map((cat) => (
           <div key={cat.id} className="mb-4">
             <h2 className="text-sm font-semibold text-slate-500 mb-2">{cat.name}</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {cat.items.map((item) => {
-                const outOfStock = item.stockQuantity !== null && item.stockQuantity <= 0;
+                const hasRecipe = item.availablePortions !== null && item.availablePortions !== undefined;
+                const outOfStock = (item.stockQuantity !== null && item.stockQuantity <= 0) || (hasRecipe && item.availablePortions! <= 0);
                 return (
                   <Card key={item.id} className="flex flex-col gap-2">
                     <div className="text-sm font-medium">{item.name}</div>
                     <div className="text-xs text-slate-500">
                       {formatMoney(Number(item.price))}
                       {item.stockQuantity !== null && ` · stock ${item.stockQuantity}`}
+                      {hasRecipe && ` · ${item.availablePortions} portions left`}
                     </div>
                     <div className="flex items-center gap-2">
                       <input

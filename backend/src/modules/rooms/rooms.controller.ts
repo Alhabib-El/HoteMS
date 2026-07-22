@@ -43,5 +43,36 @@ export async function patchRoomStatus(req: Request, res: Response) {
 }
 
 export async function patchHousekeeping(req: Request, res: Response) {
-  res.json(await roomsService.setHousekeeping(req.params.id, req.body.housekeeping));
+  res.json(await roomsService.setHousekeeping(req.params.id, req.body.housekeeping, req.staff?.id));
+}
+
+export async function getSupplyItems(_req: Request, res: Response) {
+  res.json(await roomsService.listSupplyItems());
+}
+
+export async function postSupplyItem(req: Request, res: Response) {
+  res.status(201).json(await roomsService.createSupplyItem(req.body));
+}
+
+export async function postSupplyAdjustment(req: Request, res: Response) {
+  res.status(201).json(
+    await roomsService.adjustSupplyStock(req.params.id, { ...req.body, staffId: req.staff?.id })
+  );
+}
+
+export async function getSupplyLowStock(_req: Request, res: Response) {
+  res.json(await roomsService.listLowStockSupplies());
+}
+
+export async function getSupplyRequirements(_req: Request, res: Response) {
+  res.json(await roomsService.listSupplyRequirements());
+}
+
+export async function postSupplyRequirement(req: Request, res: Response) {
+  res.status(201).json(await roomsService.upsertSupplyRequirement(req.body));
+}
+
+export async function deleteSupplyRequirement(req: Request, res: Response) {
+  await roomsService.deleteSupplyRequirement(req.params.id);
+  res.status(204).end();
 }

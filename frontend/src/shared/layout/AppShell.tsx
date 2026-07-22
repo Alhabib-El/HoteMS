@@ -45,11 +45,18 @@ export function AppShell() {
           ))}
         </nav>
         <div className="px-4 py-3 text-xs border-t border-slate-700">
-          <div className="text-slate-300 font-medium truncate">{staff?.fullName}</div>
+          <NavLink to="/me" className="text-slate-300 font-medium truncate hover:text-white hover:underline block">
+            {staff?.fullName}
+          </NavLink>
           <div className="text-slate-500 mb-2">{staff?.role}</div>
-          <button onClick={handleLogout} className="text-slate-400 hover:text-white underline">
-            Log out
-          </button>
+          <div className="flex gap-3">
+            <NavLink to="/me" className="text-slate-400 hover:text-white underline">
+              My profile
+            </NavLink>
+            <button onClick={handleLogout} className="text-slate-400 hover:text-white underline">
+              Log out
+            </button>
+          </div>
         </div>
       </aside>
       <main className="flex-1 min-w-0 p-6">

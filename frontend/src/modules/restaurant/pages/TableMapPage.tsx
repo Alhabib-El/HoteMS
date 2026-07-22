@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "../../../shared/components/Badge";
-import { Button } from "../../../shared/components/Button";
 import { Card } from "../../../shared/components/Card";
 import { useAuth } from "../../../shared/auth/AuthContext";
+import { RestaurantTabs } from "../components/RestaurantTabs";
 import { restaurantApi } from "../api";
 
 export function TableMapPage() {
@@ -37,12 +37,8 @@ export function TableMapPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Restaurant — table map</h1>
-        <Link to="/restaurant/menu">
-          <Button variant="secondary">Manage menu</Button>
-        </Link>
-      </div>
+      <RestaurantTabs />
+      <h1 className="text-xl font-bold mb-4">Table map</h1>
 
       {isLoading && <p className="text-slate-500">Loading tables…</p>}
 

@@ -22,3 +22,12 @@ roomsRouter.post("/bookings", asyncHandler(controller.postBooking));
 roomsRouter.get("/bookings/:id/folio", asyncHandler(controller.getFolio));
 roomsRouter.post("/bookings/:id/charges", asyncHandler(controller.postFolioCharge));
 roomsRouter.post("/bookings/:id/checkout", asyncHandler(controller.postCheckOut));
+
+roomsRouter.get("/supplies", asyncHandler(controller.getSupplyItems));
+roomsRouter.post("/supplies", asyncHandler(controller.postSupplyItem));
+roomsRouter.post("/supplies/:id/adjustments", asyncHandler(controller.postSupplyAdjustment));
+roomsRouter.get("/supplies/low-stock", asyncHandler(controller.getSupplyLowStock));
+
+roomsRouter.get("/supply-requirements", asyncHandler(controller.getSupplyRequirements));
+roomsRouter.post("/supply-requirements", asyncHandler(controller.postSupplyRequirement));
+roomsRouter.delete("/supply-requirements/:id", asyncHandler(controller.deleteSupplyRequirement));
