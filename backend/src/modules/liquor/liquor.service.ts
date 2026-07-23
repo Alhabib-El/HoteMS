@@ -17,7 +17,8 @@ export function createProduct(
   storeId: string,
   data: {
     name: string;
-    category?: string;
+    brand?: string;
+    category: "BEER" | "WINE" | "SPIRITS" | "LIQUEUR" | "READY_TO_DRINK" | "NON_ALCOHOLIC";
     unitPrice: number;
     costPrice: number;
     stockQuantity?: number;
@@ -25,6 +26,12 @@ export function createProduct(
   }
 ) {
   return prisma.liquorProduct.create({ data: { storeId, ...data } });
+}
+
+export async function setFeatured(productId: string, isFeatured: boolean) {
+  const product = await prisma.liquorProduct.findUnique({ where: { id: productId } });
+  if (!product) throw new HttpError(404, "Product not found");
+  return prisma.liquorProduct.update({ where: { id: productId }, data: { isFeatured } });
 }
 
 export function listTransfers(storeId: string) {

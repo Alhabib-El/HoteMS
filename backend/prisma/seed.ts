@@ -362,14 +362,49 @@ async function main() {
     data: { name: "Warehouse Liquor Store", location: "Service block, north wing" },
   });
 
+  // A full, standard off-license catalog spread across both stores: fast-moving
+  // beer/wine/RTD/non-alcoholic at the central store near the pool/restaurant, and
+  // higher-value spirits/liqueurs held in bulk at the warehouse store.
   await prisma.liquorProduct.createMany({
     data: [
-      { storeId: centralStore.id, name: "Local Beer (crate)", category: "Beer", unitPrice: 350, costPrice: 180, stockQuantity: 120, lowStockThreshold: 20 },
-      { storeId: centralStore.id, name: "House Red Wine (bottle)", category: "Wine", unitPrice: 1200, costPrice: 500, stockQuantity: 60, lowStockThreshold: 15 },
-      { storeId: centralStore.id, name: "Bottled Water (case)", category: "Non-alcoholic", unitPrice: 150, costPrice: 50, stockQuantity: 200, lowStockThreshold: 30 },
-      { storeId: warehouseStore.id, name: "Whiskey (bottle)", category: "Spirits", unitPrice: 1000, costPrice: 500, stockQuantity: 40, lowStockThreshold: 10 },
-      { storeId: warehouseStore.id, name: "Vodka (bottle)", category: "Spirits", unitPrice: 900, costPrice: 450, stockQuantity: 40, lowStockThreshold: 10 },
-      { storeId: warehouseStore.id, name: "Gin (bottle)", category: "Spirits", unitPrice: 950, costPrice: 470, stockQuantity: 40, lowStockThreshold: 10 },
+      // Beer
+      { storeId: centralStore.id, name: "Tusker Lager (crate of 24)", brand: "Tusker", category: "BEER", unitPrice: 2400, costPrice: 1600, stockQuantity: 80, lowStockThreshold: 15, isFeatured: true },
+      { storeId: centralStore.id, name: "White Cap Lager (crate of 24)", brand: "White Cap", category: "BEER", unitPrice: 2350, costPrice: 1550, stockQuantity: 70, lowStockThreshold: 15 },
+      { storeId: centralStore.id, name: "Guinness Stout (crate of 24)", brand: "Guinness", category: "BEER", unitPrice: 2800, costPrice: 1900, stockQuantity: 45, lowStockThreshold: 12 },
+      { storeId: centralStore.id, name: "Heineken (crate of 24)", brand: "Heineken", category: "BEER", unitPrice: 3000, costPrice: 2100, stockQuantity: 40, lowStockThreshold: 10 },
+      { storeId: centralStore.id, name: "Corona Extra (crate of 24)", brand: "Corona", category: "BEER", unitPrice: 3200, costPrice: 2250, stockQuantity: 30, lowStockThreshold: 10 },
+
+      // Wine
+      { storeId: centralStore.id, name: "Four Cousins Red (bottle)", brand: "Four Cousins", category: "WINE", unitPrice: 900, costPrice: 550, stockQuantity: 48, lowStockThreshold: 12 },
+      { storeId: centralStore.id, name: "Drostdy-Hof Sauvignon Blanc (bottle)", brand: "Drostdy-Hof", category: "WINE", unitPrice: 950, costPrice: 580, stockQuantity: 42, lowStockThreshold: 12 },
+      { storeId: centralStore.id, name: "Nederburg Rosé (bottle)", brand: "Nederburg", category: "WINE", unitPrice: 1400, costPrice: 900, stockQuantity: 24, lowStockThreshold: 8 },
+      { storeId: centralStore.id, name: "Moët & Chandon Brut (bottle)", brand: "Moët & Chandon", category: "WINE", unitPrice: 9500, costPrice: 6800, stockQuantity: 8, lowStockThreshold: 3, isFeatured: true },
+
+      // Ready-to-drink
+      { storeId: centralStore.id, name: "Smirnoff Ice (crate of 24)", brand: "Smirnoff", category: "READY_TO_DRINK", unitPrice: 2600, costPrice: 1800, stockQuantity: 36, lowStockThreshold: 10 },
+      { storeId: centralStore.id, name: "Redd's Apple (crate of 24)", brand: "Redd's", category: "READY_TO_DRINK", unitPrice: 2500, costPrice: 1750, stockQuantity: 30, lowStockThreshold: 10 },
+      { storeId: centralStore.id, name: "Snapp Green Apple (crate of 24)", brand: "Snapp", category: "READY_TO_DRINK", unitPrice: 2300, costPrice: 1600, stockQuantity: 28, lowStockThreshold: 10 },
+
+      // Non-alcoholic
+      { storeId: centralStore.id, name: "Bottled Water 500ml (case of 24)", brand: "Keringet", category: "NON_ALCOHOLIC", unitPrice: 720, costPrice: 400, stockQuantity: 100, lowStockThreshold: 20 },
+      { storeId: centralStore.id, name: "Coca-Cola 300ml (case of 24)", brand: "Coca-Cola", category: "NON_ALCOHOLIC", unitPrice: 960, costPrice: 600, stockQuantity: 80, lowStockThreshold: 20 },
+      { storeId: centralStore.id, name: "Krest Tonic Water (case of 24)", brand: "Krest", category: "NON_ALCOHOLIC", unitPrice: 1080, costPrice: 700, stockQuantity: 60, lowStockThreshold: 15 },
+      { storeId: centralStore.id, name: "Red Bull Energy Drink (case of 24)", brand: "Red Bull", category: "NON_ALCOHOLIC", unitPrice: 3600, costPrice: 2600, stockQuantity: 24, lowStockThreshold: 8 },
+
+      // Spirits
+      { storeId: warehouseStore.id, name: "Johnnie Walker Black Label (bottle)", brand: "Johnnie Walker", category: "SPIRITS", unitPrice: 4500, costPrice: 3200, stockQuantity: 24, lowStockThreshold: 6, isFeatured: true },
+      { storeId: warehouseStore.id, name: "Jameson Irish Whiskey (bottle)", brand: "Jameson", category: "SPIRITS", unitPrice: 3800, costPrice: 2700, stockQuantity: 20, lowStockThreshold: 6 },
+      { storeId: warehouseStore.id, name: "Smirnoff Red Vodka (bottle)", brand: "Smirnoff", category: "SPIRITS", unitPrice: 1800, costPrice: 1200, stockQuantity: 36, lowStockThreshold: 10 },
+      { storeId: warehouseStore.id, name: "Gilbey's Gin (bottle)", brand: "Gilbey's", category: "SPIRITS", unitPrice: 1700, costPrice: 1150, stockQuantity: 32, lowStockThreshold: 10 },
+      { storeId: warehouseStore.id, name: "Captain Morgan Spiced Rum (bottle)", brand: "Captain Morgan", category: "SPIRITS", unitPrice: 2100, costPrice: 1450, stockQuantity: 24, lowStockThreshold: 8 },
+      { storeId: warehouseStore.id, name: "Jose Cuervo Especial Tequila (bottle)", brand: "Jose Cuervo", category: "SPIRITS", unitPrice: 3200, costPrice: 2300, stockQuantity: 14, lowStockThreshold: 5 },
+      { storeId: warehouseStore.id, name: "Hennessy VS Cognac (bottle)", brand: "Hennessy", category: "SPIRITS", unitPrice: 7500, costPrice: 5500, stockQuantity: 10, lowStockThreshold: 4 },
+
+      // Liqueurs
+      { storeId: warehouseStore.id, name: "Amarula Cream (bottle)", brand: "Amarula", category: "LIQUEUR", unitPrice: 2200, costPrice: 1500, stockQuantity: 18, lowStockThreshold: 6 },
+      { storeId: warehouseStore.id, name: "Baileys Irish Cream (bottle)", brand: "Baileys", category: "LIQUEUR", unitPrice: 2600, costPrice: 1800, stockQuantity: 16, lowStockThreshold: 6, isFeatured: true },
+      { storeId: warehouseStore.id, name: "Kahlúa Coffee Liqueur (bottle)", brand: "Kahlúa", category: "LIQUEUR", unitPrice: 2400, costPrice: 1650, stockQuantity: 12, lowStockThreshold: 5 },
+      { storeId: warehouseStore.id, name: "Cointreau Orange Liqueur (bottle)", brand: "Cointreau", category: "LIQUEUR", unitPrice: 3600, costPrice: 2600, stockQuantity: 8, lowStockThreshold: 4 },
     ],
   });
 

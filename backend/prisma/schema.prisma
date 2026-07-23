@@ -440,16 +440,30 @@ model LiquorStore {
   transfers LiquorTransfer[]
 }
 
+// Standard off-license/bottle-store category taxonomy, used for catalog browsing and
+// filtering rather than a free-text field so every product lands in a consistent bucket.
+enum LiquorCategory {
+  BEER
+  WINE
+  SPIRITS
+  LIQUEUR
+  READY_TO_DRINK
+  NON_ALCOHOLIC
+}
+
 model LiquorProduct {
   id                 String            @id @default(cuid())
   storeId            String
   store              LiquorStore       @relation(fields: [storeId], references: [id])
   name               String
-  category           String?
+  brand              String?
+  category           LiquorCategory
   unitPrice          Decimal           @db.Decimal(10, 2)
   costPrice          Decimal           @db.Decimal(10, 2)
   stockQuantity      Int               @default(0)
   lowStockThreshold  Int               @default(5)
+  isFeatured         Boolean           @default(false)
+  createdAt          DateTime          @default(now())
   adjustments        StockAdjustment[]
   transfers          LiquorTransfer[]
   restaurantMenuItem MenuItem?

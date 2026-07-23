@@ -16,5 +16,6 @@ liquorRouter.post("/stores/:storeId/products/:productId/transfer", asyncHandler(
 
 liquorRouter.get("/stores/:storeId/transfers", asyncHandler(controller.getTransfers));
 
+liquorRouter.patch("/products/:id/featured", asyncHandler(controller.patchFeatured));
 liquorRouter.post("/products/:id/stock-adjustments", asyncHandler(controller.postStockAdjustment));
 liquorRouter.get("/low-stock", asyncHandler(controller.getLowStock));

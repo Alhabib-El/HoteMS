@@ -1,5 +1,7 @@
 import { apiClient } from "../../shared/api/client";
 
+export type LiquorCategory = "BEER" | "WINE" | "SPIRITS" | "LIQUEUR" | "READY_TO_DRINK" | "NON_ALCOHOLIC";
+
 export interface LiquorStore {
   id: string;
   name: string;
@@ -10,11 +12,14 @@ export interface LiquorProduct {
   id: string;
   storeId: string;
   name: string;
-  category?: string | null;
+  brand?: string | null;
+  category: LiquorCategory;
   unitPrice: string;
   costPrice: string;
   stockQuantity: number;
   lowStockThreshold: number;
+  isFeatured: boolean;
+  createdAt: string;
 }
 
 export interface LiquorTransfer {
@@ -38,8 +43,18 @@ export const liquorApi = {
     apiClient.get<LiquorProduct[]>(`/liquor/stores/${storeId}/products`).then((r) => r.data),
   createProduct: (
     storeId: string,
-    data: { name: string; category?: string; unitPrice: number; costPrice: number; stockQuantity?: number; lowStockThreshold?: number }
+    data: {
+      name: string;
+      brand?: string;
+      category: LiquorCategory;
+      unitPrice: number;
+      costPrice: number;
+      stockQuantity?: number;
+      lowStockThreshold?: number;
+    }
   ) => apiClient.post<LiquorProduct>(`/liquor/stores/${storeId}/products`, data).then((r) => r.data),
+  setFeatured: (productId: string, isFeatured: boolean) =>
+    apiClient.patch<LiquorProduct>(`/liquor/products/${productId}/featured`, { isFeatured }).then((r) => r.data),
 
   adjustStock: (productId: string, data: { quantityChange: number; reason: string }) =>
     apiClient.post<LiquorProduct>(`/liquor/products/${productId}/stock-adjustments`, data).then((r) => r.data),

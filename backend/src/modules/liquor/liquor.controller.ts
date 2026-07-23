@@ -26,6 +26,10 @@ export async function postTransfer(req: Request, res: Response) {
   );
 }
 
+export async function patchFeatured(req: Request, res: Response) {
+  res.json(await service.setFeatured(req.params.id, req.body.isFeatured));
+}
+
 export async function postStockAdjustment(req: Request, res: Response) {
   res.status(201).json(await service.adjustStock(req.params.id, req.body));
 }
